@@ -1,0 +1,87 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-brand-teal: #1fbba6;
+  --color-brand-blue: #0066cc;
+}
+
+[data-theme='retro'] {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-brand-teal: #00a2b1;
+  --color-brand-blue: #00678a;
+  --radius-xl: 8px;
+  --radius-2xl: 12px;
+  --radius-3xl: 16px;
+}
+
+[data-theme='retro'] .card {
+  @apply bg-white p-0 overflow-hidden rounded-lg border border-slate-200 shadow-sm;
+}
+
+[data-theme='retro'] .btn-primary {
+  @apply bg-[#00a2b1] text-white rounded-lg shadow-md hover:bg-[#008c99] transition-all;
+}
+
+[data-theme='retro'] .input-field {
+  @apply border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#00a2b1]/20 focus:border-[#00a2b1];
+}
+
+[data-theme='retro'] .bg-slate-900 {
+  @apply bg-[#00678a];
+}
+
+[data-theme='retro'] .text-white {
+  @apply text-white;
+}
+
+[data-theme='retro'] .bg-brand-teal {
+  @apply bg-[#00a2b1];
+}
+
+[data-theme='retro'] .bg-slate-50 {
+  @apply bg-[#e9f1f2];
+}
+
+[data-theme='barao'] {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-brand-teal: #00a2b1;
+  --color-brand-blue: #00a2b1;
+}
+
+[data-theme='barao'] .card {
+  @apply bg-white p-6 rounded-3xl shadow-sm border border-slate-100;
+}
+
+[data-theme='barao'] .btn-primary {
+  @apply bg-[#00a2b1] text-white rounded-2xl shadow-lg shadow-teal-900/10 hover:bg-[#008f9d] transition-all;
+}
+
+[data-theme='barao'] .input-field {
+  @apply border border-slate-200 rounded-2xl focus:ring-2 focus:ring-[#00a2b1]/20 focus:border-[#00a2b1] bg-slate-50;
+}
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 font-sans;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-white/80 backdrop-blur-md border border-white/20;
+  }
+
+  .btn-primary {
+    @apply bg-brand-teal hover:bg-brand-teal/90 text-white font-semibold py-3 px-6 rounded-xl transition-all active:scale-95 shadow-lg shadow-brand-teal/20;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-brand-teal focus:ring-2 focus:ring-brand-teal/20 outline-none transition-all bg-white;
+  }
+
+  .card {
+    @apply bg-white p-6 rounded-2xl shadow-sm border border-slate-100;
+  }
+}

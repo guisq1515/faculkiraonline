@@ -1,0 +1,8 @@
+{
+  "name": "Barão - Sistema Acadêmico",
+  "description": "Plataforma completa para gestão acadêmica da Faculdade Barão.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
