@@ -18,6 +18,7 @@ export interface User {
   short_name?: string;
   email?: string;
   role: 'admin' | 'student';
+  status?: 'active' | 'blocked';
   photo_url?: string;
   enrollment_proof_url?: string;
   enrollment_proof_urls?: Record<string, string>;
@@ -40,6 +41,7 @@ export interface Grade {
   grade_b1: number;
   grade_b2: number;
   final_grade: number;
+  absences: number;
   status: string;
 }
 

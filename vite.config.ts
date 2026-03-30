@@ -14,18 +14,18 @@ export default defineConfig(({mode}) => {
         registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
         manifest: {
-          name: 'Centro Universitário',
-          short_name: 'Centro Uni',
-          description: 'Portal do Aluno do Centro Universitário',
+          name: 'Barão da Torre',
+          short_name: 'Barão Torre',
+          description: 'Portal do Aluno da Barão da Torre',
           theme_color: '#1fbba6',
           icons: [
             {
-              src: '/icon.png',
+              src: 'https://cdn-icons-png.flaticon.com/512/3135/3135810.png',
               sizes: '192x192',
               type: 'image/png'
             },
             {
-              src: '/icon.png',
+              src: 'https://cdn-icons-png.flaticon.com/512/3135/3135810.png',
               sizes: '512x512',
               type: 'image/png'
             }

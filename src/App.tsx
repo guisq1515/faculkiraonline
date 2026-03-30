@@ -11,6 +11,7 @@ import {
   CreditCard, 
   LogOut,
   ChevronRight,
+  ChevronLeft,
   Plus,
   CheckCircle2,
   Clock,
@@ -31,6 +32,7 @@ import {
   ClipboardList,
   ExternalLink,
   Menu,
+  MessageCircle,
   FileText,
   FileDigit,
   Layers,
@@ -45,21 +47,32 @@ import {
   Home,
   UserSquare2,
   Link,
-  X
+  RefreshCw,
+  X,
+  UserPlus
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { QRCodeSVG } from "qrcode.react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-import { resetDB, COURSES } from "./storage";
+import { resetDB, COURSES, db as localDB } from "./storage";
 import { supabase } from "./lib/supabase";
-import { dbService as db } from "./services/dbService";
+import { dbService as remoteDB } from "./services/dbService";
+
+const isSupabaseConfigured = !!import.meta.env.VITE_SUPABASE_URL && !!import.meta.env.VITE_SUPABASE_ANON_KEY;
+const db = isSupabaseConfigured ? remoteDB : localDB;
 import { User, DashboardData, AppSettings, Grade, Schedule, Announcement, Payment, Activity, Exam, OnlineClass, NewsItem } from "./types";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+const getCollegeName = (settings: AppSettings | null) => {
+  const name = settings?.college_name || "Barão da Torre";
+  if (name === "Barão de Mauá") return "Barão da Torre";
+  return name;
+};
 
 interface LoginViewProps {
   appSettings: AppSettings | null;
@@ -71,9 +84,10 @@ interface LoginViewProps {
   error: string;
   loading: boolean;
   onForgotClick: () => void;
+  onSignUpClick: () => void;
 }
 
-const LoginView = ({ appSettings, handleLogin, matricula, setMatricula, password, setPassword, error, loading, onForgotClick }: LoginViewProps) => {
+const LoginView = ({ appSettings, handleLogin, matricula, setMatricula, password, setPassword, error, loading, onForgotClick, onSignUpClick }: LoginViewProps) => {
   const isRetro = appSettings?.theme === 'retro';
   const isUni = appSettings?.theme === 'uni';
   const isUniplan = appSettings?.theme === 'uniplan';
@@ -142,13 +156,20 @@ const LoginView = ({ appSettings, handleLogin, matricula, setMatricula, password
         </div>
 
         {/* Bottom Button */}
-        <div className="p-8 mt-auto relative z-20">
+        <div className="p-8 mt-auto relative z-20 space-y-4">
           <button 
             onClick={handleLogin}
             disabled={loading}
             className="w-full h-16 bg-[#e31a22] text-white text-xl font-black uppercase tracking-widest rounded-2xl flex items-center justify-center transition-all active:scale-95 shadow-lg shadow-red-200"
           >
             {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Entrar"}
+          </button>
+          
+          <button 
+            onClick={onSignUpClick}
+            className="w-full h-12 bg-white text-[#e31a22] border-2 border-[#e31a22] text-lg font-bold uppercase tracking-widest rounded-2xl flex items-center justify-center transition-all active:scale-95"
+          >
+            Inscrição
           </button>
         </div>
       </div>
@@ -176,7 +197,7 @@ const LoginView = ({ appSettings, handleLogin, matricula, setMatricula, password
             <div className="w-12 h-12 bg-white p-1.5 rounded-lg shadow-lg">
               <img src={appSettings?.logo_url} alt="Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
             </div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">{appSettings?.college_name || "Barão de Mauá"}</h1>
+            <h1 className="text-3xl font-bold text-white tracking-tight">{getCollegeName(appSettings)}</h1>
           </div>
 
           {/* Avatar Icon */}
@@ -258,13 +279,21 @@ const LoginView = ({ appSettings, handleLogin, matricula, setMatricula, password
             )}
 
             {/* Submit Button */}
-            <div className="pt-6">
+            <div className="pt-6 space-y-4">
               <button 
                 type="submit" 
                 disabled={loading}
                 className="w-full h-12 bg-[#00a2b1] hover:bg-[#00c2d1] text-white font-bold uppercase tracking-widest rounded-lg shadow-[0_0_20px_rgba(0,162,177,0.3)] transition-all active:scale-95 flex items-center justify-center"
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Entrar"}
+              </button>
+
+              <button 
+                type="button"
+                onClick={onSignUpClick}
+                className="w-full h-12 bg-white/10 hover:bg-white/20 text-white border border-white/30 font-bold uppercase tracking-widest rounded-lg transition-all active:scale-95 flex items-center justify-center"
+              >
+                Inscrição
               </button>
             </div>
           </form>
@@ -333,23 +362,34 @@ const LoginView = ({ appSettings, handleLogin, matricula, setMatricula, password
               )}
 
               {/* Submit Button */}
-              <button 
-                type="submit" 
-                disabled={loading}
-                className={cn(
-                  "w-full h-12 text-white font-bold rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2",
-                  "bg-gradient-to-r from-[#00c853] to-[#1b5e20] hover:from-[#00e676] hover:to-[#2e7d32] shadow-green-900/20"
-                )}
-              >
-                {loading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <>
-                    <LogIn className="w-4 h-4" />
-                    <span>Entrar</span>
-                  </>
-                )}
-              </button>
+              <div className="space-y-4">
+                <button 
+                  type="submit" 
+                  disabled={loading}
+                  className={cn(
+                    "w-full h-12 text-white font-bold rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2",
+                    "bg-gradient-to-r from-[#00c853] to-[#1b5e20] hover:from-[#00e676] hover:to-[#2e7d32] shadow-green-900/20"
+                  )}
+                >
+                  {loading ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <>
+                      <LogIn className="w-4 h-4" />
+                      <span>Entrar</span>
+                    </>
+                  )}
+                </button>
+
+                <button 
+                  type="button"
+                  onClick={onSignUpClick}
+                  className="w-full h-12 bg-white/5 border border-white/10 text-white font-bold rounded-xl hover:bg-white/10 transition-all active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  <span>Inscrição</span>
+                </button>
+              </div>
 
               {/* Biometrics Toggle & Forgot */}
               <div className="pt-4 space-y-4">
@@ -397,7 +437,7 @@ const LoginView = ({ appSettings, handleLogin, matricula, setMatricula, password
             <div className="w-12 h-12 bg-white p-1.5 rounded-lg shadow-lg">
               <img src={appSettings?.logo_url} alt="Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
             </div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">{appSettings?.college_name || "Barão de Mauá"}</h1>
+            <h1 className="text-3xl font-bold text-white tracking-tight">{getCollegeName(appSettings)}</h1>
           </div>
 
           {/* Avatar Icon */}
@@ -479,13 +519,21 @@ const LoginView = ({ appSettings, handleLogin, matricula, setMatricula, password
             )}
 
             {/* Submit Button */}
-            <div className="pt-6">
+            <div className="pt-6 space-y-4">
               <button 
                 type="submit" 
                 disabled={loading}
                 className="w-full h-12 bg-[#00a2b1] hover:bg-[#00c2d1] text-white font-bold uppercase tracking-widest rounded-lg shadow-[0_0_20px_rgba(0,162,177,0.3)] transition-all active:scale-95 flex items-center justify-center"
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Entrar"}
+              </button>
+
+              <button 
+                type="button"
+                onClick={onSignUpClick}
+                className="w-full h-12 bg-white/10 hover:bg-white/20 text-white border border-white/30 font-bold uppercase tracking-widest rounded-lg transition-all active:scale-95 flex items-center justify-center"
+              >
+                Inscrição
               </button>
             </div>
           </form>
@@ -515,7 +563,7 @@ const LoginView = ({ appSettings, handleLogin, matricula, setMatricula, password
             <img src={appSettings?.logo_url} alt="Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
           </div>
           <h1 className="text-3xl font-bold text-slate-900">
-            {appSettings?.theme === 'barao' ? (appSettings?.college_name || "Barão de Mauá") : "Portal do Aluno"}
+            {appSettings?.theme === 'barao' ? getCollegeName(appSettings) : "Portal do Aluno"}
           </h1>
           <p className="text-slate-500 mt-2">
             {appSettings?.theme === 'barao' ? "Centro Universitário" : "Acesse sua conta"}
@@ -574,18 +622,34 @@ const LoginView = ({ appSettings, handleLogin, matricula, setMatricula, password
             </motion.div>
           )}
 
-          <button 
-            type="submit" 
-            disabled={loading}
-            className={cn(
-              "w-full h-12 flex items-center justify-center gap-2 rounded-xl font-bold transition-all active:scale-95",
-              appSettings?.theme === 'barao' 
-                ? "bg-[#00a2b1] hover:bg-[#008f9d] text-white shadow-lg shadow-teal-900/10" 
-                : "btn-primary"
-            )}
-          >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Entrar"}
-          </button>
+          <div className="pt-6 space-y-4">
+            <button 
+              type="submit" 
+              disabled={loading}
+              className={cn(
+                "w-full h-12 flex items-center justify-center gap-2 rounded-xl font-bold transition-all active:scale-95",
+                appSettings?.theme === 'barao' 
+                  ? "bg-[#00a2b1] hover:bg-[#008f9d] text-white shadow-lg shadow-teal-900/10" 
+                  : "btn-primary"
+              )}
+            >
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Entrar"}
+            </button>
+
+            <button 
+              type="button"
+              onClick={onSignUpClick}
+              className={cn(
+                "w-full h-12 flex items-center justify-center gap-2 rounded-xl font-bold transition-all active:scale-95 border-2",
+                appSettings?.theme === 'barao' 
+                  ? "border-[#00a2b1] text-[#00a2b1] hover:bg-[#00a2b1]/5" 
+                  : "border-slate-200 text-slate-700 hover:bg-slate-50"
+              )}
+            >
+              <UserPlus className="w-5 h-5" />
+              Inscrição
+            </button>
+          </div>
 
           <button type="button" onClick={onForgotClick} className={cn(
             "w-full text-center text-sm font-medium hover:underline",
@@ -603,6 +667,7 @@ interface AdminDashboardProps {
   appSettings: any;
   setAppSettings: (val: any) => void;
   handleLogout: () => void;
+  setShowToast: (val: boolean) => void;
 }
 
 const AdminNavItem = ({ icon, label, active, onClick, theme }: any) => (
@@ -626,11 +691,26 @@ const AdminNavItem = ({ icon, label, active, onClick, theme }: any) => (
   </button>
 );
 
-const AdminDashboard = ({ appSettings, setAppSettings, handleLogout }: AdminDashboardProps) => {
+const AdminDashboard = ({ appSettings, setAppSettings, handleLogout, setShowToast }: AdminDashboardProps) => {
   const [students, setStudents] = useState<User[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [activeTab, setActiveTab] = useState("students");
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingStudent, setEditingStudent] = useState<User | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [generatingData, setGeneratingData] = useState(false);
+  
+  const handleToggleStatus = async (student: User) => {
+    try {
+      const newStatus = student.status === 'blocked' ? 'active' : 'blocked';
+      await db.updateStudent(student.id, { status: newStatus });
+      fetchStudents();
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    } catch (error) {
+      alert("Erro ao atualizar status do aluno");
+    }
+  };
   
   // New/Edit Student Form
   const [newName, setNewName] = useState("");
@@ -664,8 +744,14 @@ const AdminDashboard = ({ appSettings, setAppSettings, handleLogout }: AdminDash
     setStudents(studentsData);
   };
 
+  const fetchPayments = async () => {
+    const paymentsData = await db.getPayments();
+    setPayments(paymentsData);
+  };
+
   useEffect(() => {
     fetchStudents();
+    fetchPayments();
   }, []);
 
   const handleOpenEdit = (student: User) => {
@@ -679,8 +765,8 @@ const AdminDashboard = ({ appSettings, setAppSettings, handleLogout }: AdminDash
     setNewValidity(student.validity || "12/2026");
     setNewRegularity(student.regularity || "Regular");
     setNewCpf(student.cpf || "");
-    setNewBirthDate(student.birth_date || "");
-    setNewEnrollmentDate(student.enrollment_date || "");
+    setNewBirthDate(formatDate(student.birth_date) || "");
+    setNewEnrollmentDate(formatDate(student.enrollment_date) || "");
     setNewBirthState(student.birth_state || "");
     setNewNationality(student.nationality || "");
     setNewGender(student.gender || "");
@@ -720,6 +806,39 @@ const AdminDashboard = ({ appSettings, setAppSettings, handleLogout }: AdminDash
     setNewEnrollmentProofUrls({ barao: "", retro: "", uni: "", uniplan: "", modern: "" });
   };
 
+  const handleGenerateFictionalData = async () => {
+    console.log("handleGenerateFictionalData clicked");
+    setGeneratingData(true);
+    try {
+      const count = await db.generateAllFictionalData();
+      console.log("Generation result count:", count);
+      if (count > 0) {
+        setShowToast(true);
+        fetchStudents();
+        fetchPayments();
+      } else {
+        alert("Todos os alunos já possuem notas e boletos gerados.");
+      }
+    } catch (error) {
+      console.error("Erro ao gerar dados:", error);
+      alert("Erro ao gerar dados fictícios. Verifique o console para mais detalhes.");
+    } finally {
+      setGeneratingData(false);
+    }
+  };
+
+  const handleGenerateStudentData = async (studentId: number) => {
+    try {
+      await db.generateStudentFictionalData(studentId);
+      alert("Notas e boletos gerados com sucesso para este aluno!");
+      fetchStudents();
+      fetchPayments();
+    } catch (error) {
+      console.error("Erro ao gerar dados do aluno:", error);
+      alert("Erro ao gerar dados do aluno.");
+    }
+  };
+
   const handleSaveStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -738,8 +857,8 @@ const AdminDashboard = ({ appSettings, setAppSettings, handleLogout }: AdminDash
           validity: newValidity,
           regularity: newRegularity,
           cpf: newCpf,
-          birth_date: newBirthDate,
-          enrollment_date: newEnrollmentDate,
+          birth_date: parseDate(newBirthDate),
+          enrollment_date: parseDate(newEnrollmentDate),
           birth_state: newBirthState,
           nationality: newNationality,
           gender: newGender,
@@ -759,8 +878,8 @@ const AdminDashboard = ({ appSettings, setAppSettings, handleLogout }: AdminDash
           validity: newValidity,
           regularity: newRegularity,
           cpf: newCpf,
-          birth_date: newBirthDate,
-          enrollment_date: newEnrollmentDate,
+          birth_date: parseDate(newBirthDate),
+          enrollment_date: parseDate(newEnrollmentDate),
           birth_state: newBirthState,
           nationality: newNationality,
           gender: newGender,
@@ -800,7 +919,7 @@ const AdminDashboard = ({ appSettings, setAppSettings, handleLogout }: AdminDash
             <img src={appSettings?.logo_url} alt="Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
           </div>
           <h1 className="text-xl font-bold leading-tight">
-            {appSettings?.theme === 'barao' ? `${appSettings?.college_name || "Barão de Mauá"} Admin` : 
+            {appSettings?.theme === 'barao' ? `${getCollegeName(appSettings)} Admin` : 
              appSettings?.theme === 'uniplan' ? "Uniplan Admin" : "Portal do Aluno Admin"}
           </h1>
         </div>
@@ -841,18 +960,36 @@ const AdminDashboard = ({ appSettings, setAppSettings, handleLogout }: AdminDash
              activeTab === "settings" ? "Configurações" : "Financeiro"}
           </h2>
           <div className="flex items-center gap-4">
-            {activeTab === "students" && (
-              <button 
-                onClick={() => setShowAddModal(true)}
-                className={cn(
-                  "flex items-center gap-2 py-2 px-4 rounded-lg font-medium transition-colors",
-                  appSettings?.theme === 'retro' ? "bg-black text-white hover:bg-slate-800" : 
-                  appSettings?.theme === 'uniplan' ? "bg-[#e31a22] text-white hover:bg-[#c4161c]" :
-                  appSettings?.theme === 'barao' ? "bg-[#00a2b1] text-white hover:bg-[#008f9d]" : "bg-blue-600 text-white hover:bg-blue-700"
+            {(activeTab === "students" || activeTab === "financial") && (
+              <>
+                <button 
+                  onClick={handleGenerateFictionalData}
+                  disabled={generatingData}
+                  className={cn(
+                    "flex items-center gap-2 py-2 px-4 rounded-lg font-medium transition-colors border-2 disabled:opacity-50",
+                    appSettings?.theme === 'retro' ? "bg-white text-black border-black hover:bg-slate-100" : 
+                    appSettings?.theme === 'uniplan' ? "bg-white text-[#e31a22] border-[#e31a22] hover:bg-[#e31a22]/5" :
+                    appSettings?.theme === 'barao' ? "bg-white text-[#00a2b1] border-[#00a2b1] hover:bg-[#00a2b1]/5" : "bg-white text-blue-600 border-blue-600 hover:bg-blue-50"
+                  )}
+                  title="Gerar notas e boletos para alunos sem dados"
+                >
+                  {generatingData ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCw className="w-5 h-5" />}
+                  <span>{generatingData ? "Gerando..." : "Gerar Dados"}</span>
+                </button>
+                {activeTab === "students" && (
+                  <button 
+                    onClick={() => setShowAddModal(true)}
+                    className={cn(
+                      "flex items-center gap-2 py-2 px-4 rounded-lg font-medium transition-colors",
+                      appSettings?.theme === 'retro' ? "bg-black text-white hover:bg-slate-800" : 
+                      appSettings?.theme === 'uniplan' ? "bg-[#e31a22] text-white hover:bg-[#c4161c]" :
+                      appSettings?.theme === 'barao' ? "bg-[#00a2b1] text-white hover:bg-[#008f9d]" : "bg-blue-600 text-white hover:bg-blue-700"
+                    )}
+                  >
+                    <Plus className="w-5 h-5" /> Novo Aluno
+                  </button>
                 )}
-              >
-                <Plus className="w-5 h-5" /> Novo Aluno
-              </button>
+              </>
             )}
             <button 
               onClick={handleLogout}
@@ -869,11 +1006,27 @@ const AdminDashboard = ({ appSettings, setAppSettings, handleLogout }: AdminDash
         </div>
 
         {activeTab === "students" ? (
-          <div className={cn(
-            "card overflow-hidden p-0",
-            appSettings?.theme === 'retro' ? "bg-white border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" : ""
-          )}>
-            <table className="w-full text-left">
+          <div className="space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+              <input 
+                type="text"
+                placeholder="Buscar aluno pelo nome..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className={cn(
+                  "w-full pl-10 pr-4 py-2 rounded-lg border focus:outline-none focus:ring-2",
+                  appSettings?.theme === 'retro' ? "border-black rounded-none focus:ring-black" : 
+                  appSettings?.theme === 'uniplan' ? "border-slate-200 focus:ring-[#e31a22]" :
+                  appSettings?.theme === 'barao' ? "border-slate-200 focus:ring-[#00a2b1]" : "border-slate-200 focus:ring-blue-500"
+                )}
+              />
+            </div>
+            <div className={cn(
+              "card overflow-hidden p-0",
+              appSettings?.theme === 'retro' ? "bg-white border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" : ""
+            )}>
+              <table className="w-full text-left">
               <thead className={cn(
                 "border-b",
                 appSettings?.theme === 'retro' ? "bg-black text-white border-black" : 
@@ -885,6 +1038,7 @@ const AdminDashboard = ({ appSettings, setAppSettings, handleLogout }: AdminDash
                   <th className="p-4 text-xs font-bold uppercase">Matrícula</th>
                   <th className="p-4 text-xs font-bold uppercase">Curso</th>
                   <th className="p-4 text-xs font-bold uppercase">Semestre</th>
+                  <th className="p-4 text-xs font-bold uppercase">Status</th>
                   <th className="p-4 text-xs font-bold uppercase">Ações</th>
                 </tr>
               </thead>
@@ -892,9 +1046,9 @@ const AdminDashboard = ({ appSettings, setAppSettings, handleLogout }: AdminDash
                 "divide-y",
                 appSettings?.theme === 'retro' ? "divide-black" : "divide-slate-100"
               )}>
-                {students.map((s, index) => (
+                {students.filter(s => (s.name || "").toLowerCase().includes((searchTerm || "").toLowerCase())).map((s, index) => (
                   <tr 
-                    key={`${s.id}-${index}`} 
+                    key={`admin-student-row-${s.id || index}-${index}`} 
                     className={cn(
                       "transition-colors cursor-pointer group",
                       appSettings?.theme === 'retro' ? "hover:bg-slate-100" : "hover:bg-slate-50"
@@ -927,8 +1081,32 @@ const AdminDashboard = ({ appSettings, setAppSettings, handleLogout }: AdminDash
                       appSettings?.theme === 'retro' ? "text-black" : "text-slate-600"
                     )}>{s.semester}º</td>
                     <td className="p-4">
+                      <span className={cn(
+                        "px-2 py-1 rounded-full text-[10px] font-bold uppercase",
+                        s.status === 'blocked' ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600"
+                      )}>
+                        {s.status === 'blocked' ? 'Bloqueado' : 'Ativo'}
+                      </span>
+                    </td>
+                    <td className="p-4">
                       <div className="flex items-center gap-2">
                         <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleStatus(s);
+                          }}
+                          className={cn(
+                            "px-3 py-1 font-bold text-xs transition-all rounded-lg",
+                            s.status === 'blocked' ? "bg-green-600 text-white hover:bg-green-700" : "bg-red-600 text-white hover:bg-red-700"
+                          )}
+                        >
+                          {s.status === 'blocked' ? 'Liberar' : 'Bloquear'}
+                        </button>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenEdit(s);
+                          }}
                           className={cn(
                             "px-3 py-1 font-bold text-xs transition-all",
                             appSettings?.theme === 'retro' ? "bg-black text-white" : 
@@ -944,7 +1122,8 @@ const AdminDashboard = ({ appSettings, setAppSettings, handleLogout }: AdminDash
               </tbody>
             </table>
           </div>
-        ) : activeTab === "settings" ? (
+        </div>
+      ) : activeTab === "settings" ? (
           <div className="max-w-2xl space-y-8">
             <div className="card space-y-6">
               <h3 className="text-xl font-bold text-slate-900">Configurações do Aplicativo</h3>
@@ -955,7 +1134,7 @@ const AdminDashboard = ({ appSettings, setAppSettings, handleLogout }: AdminDash
                   <input 
                     type="text" 
                     className="input-field w-full" 
-                    placeholder="Ex: Barão de Mauá"
+                    placeholder="Ex: Barão da Torre"
                     value={appSettings?.college_name || ""}
                     onChange={async (e) => {
                       const newSettings = await db.updateAppSettings({ college_name: e.target.value });
@@ -1062,8 +1241,8 @@ const AdminDashboard = ({ appSettings, setAppSettings, handleLogout }: AdminDash
                         appSettings?.theme === 'barao' ? "border-[#00a2b1] bg-[#00a2b1]/5" : "border-slate-100 hover:border-slate-200"
                       )}
                     >
-                      <div className="font-bold text-slate-900">Barão</div>
-                      <div className="text-xs text-slate-500">Tema oficial {appSettings?.college_name || "Barão de Mauá"} com visual clássico e limpo.</div>
+                      <div className="font-bold text-slate-900">Barão da Torre</div>
+                      <div className="text-xs text-slate-500">Tema oficial {getCollegeName(appSettings)} com visual clássico e limpo.</div>
                     </button>
                     <button 
                       onClick={async () => {
@@ -1101,6 +1280,58 @@ const AdminDashboard = ({ appSettings, setAppSettings, handleLogout }: AdminDash
               </div>
             </div>
           </div>
+        ) : activeTab === "financial" ? (
+          <div className="space-y-6">
+            <div className="card p-0 overflow-hidden">
+              <table className="w-full text-left">
+                <thead className={cn(
+                  "border-b",
+                  appSettings?.theme === 'retro' ? "bg-black text-white border-black" : 
+                  appSettings?.theme === 'uniplan' ? "bg-[#e31a22] text-white border-[#e31a22]" :
+                  appSettings?.theme === 'barao' ? "bg-[#00a2b1] text-white border-[#00a2b1]" : "bg-slate-50 border-slate-100"
+                )}>
+                  <tr>
+                    <th className="p-4 text-xs font-bold uppercase">Aluno</th>
+                    <th className="p-4 text-xs font-bold uppercase">Vencimento</th>
+                    <th className="p-4 text-xs font-bold uppercase">Valor</th>
+                    <th className="p-4 text-xs font-bold uppercase">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {payments.slice(0, 50).map((p, index) => {
+                    const student = students.find(s => Number(s.id) === Number(p.student_id));
+                    return (
+                      <tr key={`admin-pay-${p.id || index}-${index}`} className="hover:bg-slate-50 transition-colors">
+                        <td className="p-4">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-slate-700">{student?.name || "Aluno Desconhecido"}</span>
+                            <span className="text-[10px] text-slate-400 font-mono">({student?.matricula})</span>
+                          </div>
+                        </td>
+                        <td className="p-4 text-sm text-slate-600 font-mono">{p.due_date}</td>
+                        <td className="p-4 text-sm font-bold text-slate-700">R$ {p.amount.toFixed(2)}</td>
+                        <td className="p-4">
+                          <span className={cn(
+                            "px-2 py-1 rounded-full text-[10px] font-bold uppercase",
+                            p.status === "Pago" ? "bg-green-100 text-green-600" : "bg-amber-100 text-amber-600"
+                          )}>
+                            {p.status}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {payments.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="p-12 text-center text-slate-400">
+                        Nenhum boleto encontrado. Clique em "Gerar Dados" na aba Alunos para popular o financeiro.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         ) : (
           <div className="card text-center py-20 text-slate-400">
             Módulo em desenvolvimento para esta demonstração.
@@ -1124,6 +1355,23 @@ const AdminDashboard = ({ appSettings, setAppSettings, handleLogout }: AdminDash
               <h3 className="text-2xl font-bold text-slate-900 mb-6">
                 {editingStudent ? "Editar Aluno" : "Cadastrar Novo Aluno"}
               </h3>
+              
+              {editingStudent && (
+                <div className="mb-6 p-4 bg-blue-50 rounded-2xl border border-blue-100 flex items-center justify-between">
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-bold text-blue-900">Dados Fictícios</h4>
+                    <p className="text-[10px] text-blue-600">Gere notas e boletos de teste para este aluno.</p>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={() => handleGenerateStudentData(editingStudent.id)}
+                    className="flex items-center gap-2 py-2 px-3 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-colors"
+                  >
+                    <RefreshCw className="w-4 h-4" /> Gerar Agora
+                  </button>
+                </div>
+              )}
+
               <form onSubmit={handleSaveStudent} className="space-y-4">
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-500 uppercase">Nome Completo</label>
@@ -1143,14 +1391,14 @@ const AdminDashboard = ({ appSettings, setAppSettings, handleLogout }: AdminDash
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-500 uppercase">Semestre</label>
                     <select className="input-field" value={newSemester} onChange={e => setNewSemester(e.target.value)}>
-                      {[1,2,3,4,5,6,7,8,9,10].map(n => <option key={n} value={n}>{n}º Semestre</option>)}
+                      {[1,2,3,4,5,6,7,8,9,10].map((n, i) => <option key={`sem-opt-${n}-${i}`} value={n}>{n}º Semestre</option>)}
                     </select>
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-500 uppercase">Curso</label>
                     <select className="input-field" value={newCourse} onChange={e => setNewCourse(e.target.value)} required>
                       <option value="">Selecione um curso</option>
-                      {COURSES.map(c => <option key={c} value={c}>{c}</option>)}
+                      {COURSES.map((c, i) => <option key={`course-opt-${c}-${i}`} value={c}>{c}</option>)}
                     </select>
                   </div>
                 </div>
@@ -1263,13 +1511,13 @@ const AdminDashboard = ({ appSettings, setAppSettings, handleLogout }: AdminDash
                   </div>
                   
                   {[
-                    { id: 'barao', name: 'Tema Barão' },
+                    { id: 'barao', name: 'Tema Barão da Torre' },
                     { id: 'modern', name: 'Tema Moderno' },
                     { id: 'retro', name: 'Tema Retrô' },
                     { id: 'uni', name: 'Tema Uni' },
                     { id: 'uniplan', name: 'Tema Uniplan' }
-                  ].map(theme => (
-                    <div key={theme.id} className="space-y-2 p-3 bg-slate-50/50 rounded-2xl border border-slate-100">
+                  ].map((theme, i) => (
+                    <div key={`theme-proof-upload-${theme.id}-${i}`} className="space-y-2 p-3 bg-slate-50/50 rounded-2xl border border-slate-100">
                       <label className="text-[10px] font-bold text-slate-500 uppercase flex items-center justify-between">
                         <span>{theme.name}</span>
                         {newEnrollmentProofUrls[theme.id] && (
@@ -1344,6 +1592,20 @@ const formatDate = (dateStr: string | undefined) => {
   return dateStr;
 };
 
+const parseDate = (dateStr: string | undefined) => {
+  if (!dateStr) return "";
+  if (dateStr.includes('/')) {
+    const parts = dateStr.split('/');
+    if (parts.length === 3) {
+      if (parts[2].length === 4) {
+        return `${parts[2]}-${parts[1]}-${parts[0]}`;
+      }
+      return parts.join('-');
+    }
+  }
+  return dateStr;
+};
+
 export default function App() {
   const [user, setUser] = useState<any | null>(null);
   const [view, setView] = useState<string>("login");
@@ -1362,7 +1624,24 @@ export default function App() {
 
     const loadSettings = async () => {
       const settings = await db.getAppSettings();
-      if (settings) setAppSettings(settings);
+      if (settings) {
+        // Global override to ensure the name and logo are always updated
+        if (settings.college_name === "Barão de Mauá") {
+          settings.college_name = "Barão da Torre";
+        }
+        
+        const oldLogos = [
+          "https://lh3.googleusercontent.com/d/1X_m_v_v_v_v_v_v_v_v_v_v_v_v_v_v_v",
+          "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRVFYMUkJQx9MhrRDAOkp8HpK8qBnhc7WwLtw&s",
+          "https://picsum.photos/seed/college/200/200",
+          "/icon.png"
+        ];
+        if (oldLogos.includes(settings.logo_url)) {
+          settings.logo_url = "https://cdn-icons-png.flaticon.com/512/3135/3135810.png";
+        }
+        
+        setAppSettings(settings);
+      }
     };
     loadSettings();
   }, []);
@@ -1383,6 +1662,168 @@ export default function App() {
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotResult, setForgotResult] = useState<any>(null);
   const [isForgotLoading, setIsForgotLoading] = useState(false);
+
+  const [showSignUpModal, setShowSignUpModal] = useState(false);
+  const [signUpName, setSignUpName] = useState("");
+  const [signUpEmail, setSignUpEmail] = useState("");
+  const [signUpPassword, setSignUpPassword] = useState("");
+  const [signUpCourse, setSignUpCourse] = useState("");
+  const [isSignUpLoading, setIsSignUpLoading] = useState(false);
+  const [signUpSuccessMatricula, setSignUpSuccessMatricula] = useState<string | null>(null);
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSignUpLoading(true);
+    try {
+      // Generate matrícula: 4 digits year + 4 random digits
+      const year = new Date().getFullYear().toString();
+      const random = Math.floor(1000 + Math.random() * 9000).toString();
+      const generatedMatricula = year + random;
+
+      await db.signUp({
+        name: signUpName,
+        email: signUpEmail,
+        matricula: generatedMatricula,
+        password: signUpPassword,
+        course: signUpCourse
+      });
+      
+      setSignUpSuccessMatricula(generatedMatricula);
+      // Reset fields
+      setSignUpName("");
+      setSignUpEmail("");
+      setSignUpPassword("");
+      setSignUpCourse("");
+    } catch (err: any) {
+      alert(err.message || "Erro ao realizar inscrição");
+    } finally {
+      setIsSignUpLoading(false);
+    }
+  };
+
+  const SignUpModal = () => {
+    if (!showSignUpModal) return null;
+
+    const handleClose = () => {
+      setShowSignUpModal(false);
+      setSignUpSuccessMatricula(null);
+    };
+
+    return (
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-md flex items-center justify-center p-6"
+      >
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="bg-white rounded-[32px] w-full max-w-sm overflow-hidden shadow-2xl"
+        >
+          {signUpSuccessMatricula ? (
+            <div className="p-8 text-center space-y-6">
+              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                <CheckCircle2 className="w-10 h-10 text-green-600" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Inscrição Realizada!</h3>
+                <p className="text-slate-500 text-sm leading-relaxed">
+                  Sua inscrição foi concluída com sucesso. Guarde seu número de matrícula (RA) abaixo para acessar o portal.
+                </p>
+              </div>
+              
+              <div className="bg-slate-50 border border-dashed border-slate-200 rounded-2xl p-6 space-y-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sua Matrícula (RA)</span>
+                <div className="text-3xl font-black text-blue-600 tracking-wider font-mono">
+                  {signUpSuccessMatricula}
+                </div>
+              </div>
+
+              <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex gap-3 text-left">
+                <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+                <p className="text-[10px] text-amber-800 font-medium leading-tight">
+                  Sua conta está em análise e aguarda liberação pelo administrador. Você poderá acessar o portal assim que for aprovado.
+                </p>
+              </div>
+
+              <button 
+                onClick={handleClose}
+                className="w-full h-14 bg-slate-900 hover:bg-black text-white font-bold rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2"
+              >
+                Concluído
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="p-6 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+                <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight">Nova Inscrição</h3>
+                <button onClick={handleClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
+                  <X className="w-5 h-5 text-slate-400" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSignUp} className="p-8 space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Nome Completo</label>
+                  <input 
+                    type="text" 
+                    required
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl h-12 px-4 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                    placeholder="Seu nome"
+                    value={signUpName}
+                    onChange={(e) => setSignUpName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">E-mail</label>
+                  <input 
+                    type="email" 
+                    required
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl h-12 px-4 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                    placeholder="seu@email.com"
+                    value={signUpEmail}
+                    onChange={(e) => setSignUpEmail(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Senha</label>
+                  <input 
+                    type="password" 
+                    required
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl h-12 px-4 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                    placeholder="Crie uma senha"
+                    value={signUpPassword}
+                    onChange={(e) => setSignUpPassword(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Curso</label>
+                  <select 
+                    required
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl h-12 px-4 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all appearance-none"
+                    value={signUpCourse}
+                    onChange={(e) => setSignUpCourse(e.target.value)}
+                  >
+                    <option value="">Selecione um curso</option>
+                    {COURSES.map((c, i) => <option key={`signup-course-${c}-${i}`} value={c}>{c}</option>)}
+                  </select>
+                </div>
+
+                <button 
+                  type="submit" 
+                  disabled={isSignUpLoading}
+                  className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-200 transition-all active:scale-95 flex items-center justify-center gap-2 mt-4"
+                >
+                  {isSignUpLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Realizar Inscrição"}
+                </button>
+              </form>
+            </>
+          )}
+        </motion.div>
+      </motion.div>
+    );
+  };
 
   const ForgotRecoveryModal = () => {
     if (!showForgotModal) return null;
@@ -1632,6 +2073,11 @@ export default function App() {
       const userData = await db.login(matricula, password);
       
       if (userData) {
+        if (userData.status === 'blocked') {
+          setError("Sua conta está bloqueada. Aguarde a liberação pelo administrador.");
+          setLoading(false);
+          return;
+        }
         console.log("Login bem-sucedido para:", userData.name);
         if (userData.role === 'admin') {
           setUser(userData);
@@ -1692,7 +2138,23 @@ export default function App() {
 
   const fetchStudentData = async (id: number) => {
     const dashboardData = await db.getStudentDashboard(id);
-    setData(dashboardData);
+    
+    // Auto-generate data if grades are empty
+    if (dashboardData.grades.length === 0) {
+      setLoading(true);
+      try {
+        await db.generateStudentFictionalData(id);
+        const updatedData = await db.getStudentDashboard(id);
+        setData(updatedData);
+      } catch (error) {
+        console.error("Erro ao gerar dados automáticos:", error);
+        setData(dashboardData);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setData(dashboardData);
+    }
   };
 
   const handleLogout = () => {
@@ -1723,6 +2185,7 @@ export default function App() {
           error={error}
           loading={loading}
           onForgotClick={() => setShowForgotModal(true)}
+          onSignUpClick={() => setShowSignUpModal(true)}
         />
       );
       case "dashboard": return <StudentDashboard />;
@@ -1741,6 +2204,7 @@ export default function App() {
           appSettings={appSettings}
           setAppSettings={setAppSettings}
           handleLogout={handleLogout}
+          setShowToast={setShowToast}
         />
       );
       default: return (
@@ -1760,6 +2224,7 @@ export default function App() {
             error={error}
             loading={loading}
             onForgotClick={() => setShowForgotModal(true)}
+            onSignUpClick={() => setShowSignUpModal(true)}
           />
           
           <div className="fixed bottom-4 left-4 right-4 flex flex-col items-center gap-2">
@@ -1817,6 +2282,57 @@ export default function App() {
               <h2 className="text-3xl font-black text-white">Secretaria</h2>
             </div>
           </div>
+
+          {/* Uniplan News Carousel */}
+          <div className="px-4 mt-6">
+            <div className="bg-[#f5f6f8] rounded-[32px] overflow-hidden border border-slate-100 shadow-sm">
+              <div className="relative h-44">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={newsIndex}
+                    initial={{ opacity: 0, scale: 1.1 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.5 }}
+                    className="absolute inset-0"
+                  >
+                    <img 
+                      src={data.news && data.news.length > 0 ? data.news[newsIndex].image : ""} 
+                      alt="News" 
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent" />
+                    <div className="absolute inset-y-0 left-0 w-2/3 p-6 flex flex-col justify-center">
+                      <span className="text-[#e31a22] font-black text-[10px] uppercase tracking-widest mb-1 bg-white/90 px-2 py-0.5 rounded-sm self-start">
+                        Notícias
+                      </span>
+                      <h3 className="text-white font-black text-lg leading-tight line-clamp-2 italic tracking-tighter">
+                        {data.news && data.news.length > 0 ? data.news[newsIndex].title : ""}
+                      </h3>
+                      <button className="mt-3 text-white/90 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 hover:text-white transition-colors">
+                        Ler mais <ChevronRight className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+
+                {/* Dots */}
+                <div className="absolute bottom-4 right-6 flex gap-1.5">
+                  {data.news && data.news.map((_, i) => (
+                    <button 
+                      key={`news-dot-uniplan-${i}`}
+                      onClick={() => setNewsIndex(i)}
+                      className={cn(
+                        "w-2 h-2 rounded-full transition-all",
+                        i === newsIndex ? "bg-white w-5" : "bg-white/30"
+                      )} 
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </>
       ) : appSettings?.theme === 'barao' ? (
         <>
@@ -1859,47 +2375,73 @@ export default function App() {
 
           {/* Barao News Hero */}
           <div className="p-4 -mt-4 relative z-20">
-            <AnimatePresence mode="wait">
-              <motion.div 
-                key={newsIndex}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100"
-              >
-                <div className="h-48 overflow-hidden relative">
-                  <img 
-                    src={data.news && data.news.length > 0 ? data.news[newsIndex].image : "https://picsum.photos/seed/event/800/400"} 
-                    alt="News" 
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-1.5 border border-white/20">
-                    <img src={appSettings.logo_url} alt="Logo" className="w-4 h-4 object-contain" referrerPolicy="no-referrer" />
-                    <span className="text-[8px] font-black text-slate-800 uppercase tracking-tighter">{appSettings?.college_name || "Barão de Mauá"}</span>
+            <div className="relative group">
+              <AnimatePresence mode="wait">
+                <motion.div 
+                  key={newsIndex}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.05 }}
+                  transition={{ duration: 0.4 }}
+                  className="bg-white rounded-[32px] shadow-2xl overflow-hidden border border-slate-100"
+                >
+                  <div className="h-56 overflow-hidden relative">
+                    <img 
+                      src={data.news && data.news.length > 0 ? data.news[newsIndex].image : "https://picsum.photos/seed/event/800/400"} 
+                      alt="News" 
+                      className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                    <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1.5 border border-white/20">
+                      <img src={appSettings.logo_url} alt="Logo" className="w-4 h-4 object-contain" referrerPolicy="no-referrer" />
+                      <span className="text-[8px] font-black text-slate-800 uppercase tracking-tighter">{getCollegeName(appSettings)}</span>
+                    </div>
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <span className="bg-orange-500 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-md tracking-widest mb-1 inline-block">Destaque</span>
+                      <h3 className="text-white text-lg font-black leading-tight line-clamp-2 drop-shadow-md">
+                        {data.news && data.news.length > 0 ? data.news[newsIndex].title : "Carregando notícias..."}
+                      </h3>
+                    </div>
                   </div>
-                </div>
-                <div className="p-5">
-                  <h3 className="text-lg font-black text-slate-900 leading-tight mb-2">
-                    {data.news && data.news.length > 0 ? data.news[newsIndex].title : "Carregando notícias..."}
-                  </h3>
-                  <p className="text-sm text-slate-500 leading-relaxed line-clamp-2">
-                    {data.news && data.news.length > 0 ? data.news[newsIndex].description : ""}
-                  </p>
-                </div>
-              </motion.div>
-            </AnimatePresence>
-            <div className="flex justify-center gap-2 mt-4">
-              {data.news && data.news.map((_, i) => (
-                <button 
-                  key={i} 
-                  onClick={() => setNewsIndex(i)}
-                  className={cn(
-                    "w-2 h-2 rounded-full transition-all duration-300",
-                    i === newsIndex ? "bg-indigo-600 w-4" : "bg-slate-200"
-                  )} 
-                />
-              ))}
+                  <div className="p-5 space-y-4">
+                    <p className="text-sm text-slate-500 leading-relaxed line-clamp-2">
+                      {data.news && data.news.length > 0 ? data.news[newsIndex].description : ""}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <button className="text-[#00a2b1] text-xs font-black uppercase tracking-widest flex items-center gap-1 group/btn">
+                        Saiba Mais <ChevronRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
+                      </button>
+                      <div className="flex gap-1.5">
+                        {data.news && data.news.map((_, i) => (
+                          <button 
+                            key={`news-dot-nav-${i}`} 
+                            onClick={() => setNewsIndex(i)}
+                            className={cn(
+                              "w-1.5 h-1.5 rounded-full transition-all duration-500",
+                              i === newsIndex ? "bg-[#00a2b1] w-5" : "bg-slate-200"
+                            )} 
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Navigation Arrows */}
+              <button 
+                onClick={() => setNewsIndex(prev => (prev - 1 + (data.news?.length || 1)) % (data.news?.length || 1))}
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg text-slate-800 opacity-0 group-hover:opacity-100 transition-opacity z-30"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              <button 
+                onClick={() => setNewsIndex(prev => (prev + 1) % (data.news?.length || 1))}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg text-slate-800 opacity-0 group-hover:opacity-100 transition-opacity z-30"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
             </div>
           </div>
         </>
@@ -1909,7 +2451,7 @@ export default function App() {
           <div className="bg-[#00678a] text-white px-4 py-3 flex items-center justify-between sticky top-0 z-50">
             <div className="flex items-center gap-4">
               <Menu className="w-6 h-6" />
-              <h1 className="text-xl font-medium tracking-wide">{appSettings?.college_name || "Barão de Mauá"}</h1>
+              <h1 className="text-xl font-medium tracking-wide">{getCollegeName(appSettings)}</h1>
             </div>
             <div className="flex items-center gap-4">
               <Bell className="w-6 h-6" />
@@ -1919,7 +2461,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* Classic Hero */}
+          {/* Classic Hero / News Carousel */}
           <div className="relative h-64 overflow-hidden bg-[#004a63]">
             {/* Geometric Background */}
             <div className="absolute inset-0 opacity-40">
@@ -1930,33 +2472,70 @@ export default function App() {
               }} />
             </div>
             
-            <div className="relative z-10 h-full flex items-center px-6 gap-6">
-              <img 
-                src={user?.photo_url} 
-                alt="Student" 
-                className="w-32 h-40 object-cover border-2 border-white/20 shadow-xl"
-                referrerPolicy="no-referrer"
-              />
-              <div className="flex-1 text-white">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 bg-white p-1 rounded-sm">
-                    <img src={appSettings.logo_url} alt="Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
-                  </div>
-                  <span className="font-bold text-sm uppercase tracking-wider">Carreiras</span>
+            <AnimatePresence mode="wait">
+              <motion.div 
+                key={newsIndex}
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -50 }}
+                transition={{ duration: 0.5 }}
+                className="relative z-10 h-full flex items-center px-6 gap-6"
+              >
+                <div className="w-32 h-40 shrink-0 overflow-hidden border-2 border-white/20 shadow-xl rounded-sm bg-white/10 backdrop-blur-sm">
+                  <img 
+                    src={data.news && data.news.length > 0 ? data.news[newsIndex].image : "https://picsum.photos/seed/event/800/400"} 
+                    alt="News" 
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
                 </div>
-                <h2 className="text-lg font-bold leading-tight mb-2">Conheça o novo Portal de Carreiras</h2>
-                <p className="text-xs text-white/80 mb-4">Os melhores caminhos para o seu futuro acadêmico.</p>
-                <button className="bg-white/20 backdrop-blur-md px-4 py-1.5 rounded text-xs font-bold border border-white/30">
-                  Saiba mais
-                </button>
-              </div>
-            </div>
+                <div className="flex-1 text-white">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 bg-white p-1 rounded-sm">
+                      <img src={appSettings.logo_url} alt="Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                    </div>
+                    <span className="font-bold text-sm uppercase tracking-wider">Notícias</span>
+                  </div>
+                  <h2 className="text-lg font-bold leading-tight mb-2">
+                    {data.news && data.news.length > 0 ? data.news[newsIndex].title : "Carregando notícias..."}
+                  </h2>
+                  <p className="text-xs text-white/80 mb-4 line-clamp-2">
+                    {data.news && data.news.length > 0 ? data.news[newsIndex].description : ""}
+                  </p>
+                  <button className="bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-1.5 rounded text-xs font-bold border border-white/30 transition-colors">
+                    Saiba mais
+                  </button>
+                </div>
+              </motion.div>
+            </AnimatePresence>
             
             {/* Pagination dots */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-white" />
-              <div className="w-2 h-2 rounded-full bg-white/40" />
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
+              {data.news && data.news.map((_, i) => (
+                <button 
+                  key={`news-dot-retro-${i}`}
+                  onClick={() => setNewsIndex(i)}
+                  className={cn(
+                    "w-2 h-2 rounded-full transition-all duration-300",
+                    i === newsIndex ? "bg-white w-4" : "bg-white/40"
+                  )} 
+                />
+              ))}
             </div>
+
+            {/* Navigation Arrows */}
+            <button 
+              onClick={() => setNewsIndex(prev => (prev - 1 + (data.news?.length || 1)) % (data.news?.length || 1))}
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 hover:bg-black/40 rounded-full flex items-center justify-center text-white z-30 transition-colors"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button 
+              onClick={() => setNewsIndex(prev => (prev + 1) % (data.news?.length || 1))}
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 hover:bg-black/40 rounded-full flex items-center justify-center text-white z-30 transition-colors"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
           </div>
         </>
       ) : appSettings?.theme === 'uni' ? (
@@ -2004,6 +2583,69 @@ export default function App() {
               </button>
             </div>
           </div>
+
+          {/* Uni News Carousel */}
+          <div className="px-6 -mt-6 relative z-20">
+            <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100">
+              <div className="relative h-48">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={newsIndex}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.4 }}
+                    className="absolute inset-0"
+                  >
+                    <img 
+                      src={data.news && data.news.length > 0 ? data.news[newsIndex].image : ""} 
+                      alt="News" 
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                      <span className="inline-block bg-blue-600 text-white text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded mb-1">
+                        Destaque
+                      </span>
+                      <h3 className="text-white font-bold text-sm leading-tight line-clamp-2">
+                        {data.news && data.news.length > 0 ? data.news[newsIndex].title : ""}
+                      </h3>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+
+                {/* Navigation */}
+                <div className="absolute top-1/2 -translate-y-1/2 left-2 right-2 flex justify-between pointer-events-none">
+                  <button 
+                    onClick={() => setNewsIndex(prev => (prev - 1 + (data.news?.length || 1)) % (data.news?.length || 1))}
+                    className="w-8 h-8 bg-black/30 hover:bg-black/50 rounded-full flex items-center justify-center text-white backdrop-blur-sm pointer-events-auto transition-colors"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button 
+                    onClick={() => setNewsIndex(prev => (prev + 1) % (data.news?.length || 1))}
+                    className="w-8 h-8 bg-black/30 hover:bg-black/50 rounded-full flex items-center justify-center text-white backdrop-blur-sm pointer-events-auto transition-colors"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Dots */}
+                <div className="absolute bottom-2 right-4 flex gap-1">
+                  {data.news && data.news.map((_, i) => (
+                    <div 
+                      key={`news-dot-uni-${i}`}
+                      className={cn(
+                        "w-1.5 h-1.5 rounded-full transition-all",
+                        i === newsIndex ? "bg-white w-3" : "bg-white/40"
+                      )} 
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </>
       ) : (
         /* Modern Header */
@@ -2016,7 +2658,7 @@ export default function App() {
               <img src={appSettings.logo_url} alt="Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
             </div>
             <div>
-              <h1 className="text-lg font-bold tracking-tight leading-tight">{appSettings?.college_name || "Barão de Mauá"}</h1>
+              <h1 className="text-lg font-bold tracking-tight leading-tight">{getCollegeName(appSettings)}</h1>
               <p className="text-[10px] font-bold uppercase tracking-widest text-teal-50">Portal do Aluno</p>
             </div>
           </div>
@@ -2119,13 +2761,14 @@ export default function App() {
           </>
         ) : appSettings?.theme === 'barao' ? (
           <>
+            <DashboardCard icon={<MonitorPlay />} label="Aulas Online EAD" color="bg-blue-500" onClick={() => navigateTo("online-classes")} />
             <DashboardCard icon={<GraduationCap />} label="Notas e Faltas" color="bg-blue-500" onClick={() => navigateTo("grades")} />
             <DashboardCard icon={<Calendar />} label="Horario de Aulas" color="bg-blue-500" onClick={() => navigateTo("schedule")} />
             <DashboardCard icon={<Bell />} label="Comunicados" color="bg-blue-500" onClick={() => navigateTo("announcements")} />
             <DashboardCard icon={<CreditCard />} label="Cartão Virtual" color="bg-blue-500" onClick={() => navigateTo("card")} />
             <DashboardCard icon={<Wallet />} label="Financeiro" color="bg-blue-500" onClick={() => navigateTo("financial")} />
             <DashboardCard icon={<Library />} label="Atividade Complementar" color="bg-blue-500" onClick={() => navigateTo("activities")} />
-            <DashboardCard icon={<UserIcon />} label={appSettings?.theme === 'uni' ? "Meu Cadastro" : "Perfil"} color="bg-blue-500" onClick={() => navigateTo("profile")} />
+            <DashboardCard icon={<UserIcon />} label="Perfil" color="bg-blue-500" onClick={() => navigateTo("profile")} />
             <DashboardCard icon={<BookOpen />} label="Biblioteca Online" color="bg-blue-500" onClick={() => navigateTo("library")} />
           </>
         ) : appSettings?.theme === 'uni' ? (
@@ -2222,7 +2865,7 @@ export default function App() {
                 .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                 .slice(0, 3)
                 .map((announcement, index) => (
-                  <div key={`${announcement.id}-${index}`} className="card border-l-4 border-l-blue-600">
+                  <div key={`ann-preview-item-${announcement.id || index}-${index}`} className="card border-l-4 border-l-blue-600">
                     <h4 className="font-bold text-slate-900">{announcement.title}</h4>
                     <p className="text-sm text-slate-500 mt-1 line-clamp-2">{announcement.content}</p>
                     <p className="text-[10px] text-slate-400 mt-3 uppercase font-bold">{announcement.date}</p>
@@ -2314,6 +2957,7 @@ export default function App() {
         if (label.includes("Cartão")) return "text-pink-600";
         if (label.includes("Financeiro")) return "text-blue-500";
         if (label.includes("Atividade")) return "text-blue-600";
+        if (label.includes("Online")) return "text-orange-500";
         return "text-blue-600";
       };
 
@@ -2396,37 +3040,92 @@ export default function App() {
     </div>
   );
 
-  const GradesView = () => (
-    <div className={cn(
-      "min-h-screen",
-      appSettings?.theme === 'retro' ? "bg-[#e9f1f2]" : "bg-slate-50"
-    )}>
-      <ViewHeader title="Consulta de Notas" onBack={() => navigateTo("dashboard")} />
-      <div className="p-6 space-y-4">
-        {data.grades.map((grade, index) => (
-          <div key={`${grade.id}-${index}`} className="card">
-            <div className="flex justify-between items-start mb-4">
-              <h3 className={cn(
-                "font-bold",
-                appSettings?.theme === 'retro' ? "text-black" : "text-slate-900"
-              )}>{grade.discipline_name}</h3>
-              <span className={cn(
-                "px-3 py-1 text-[10px] font-bold uppercase",
-                appSettings?.theme === 'retro' ? "bg-black text-white" : (grade.status === "Aprovado" ? "bg-emerald-100 text-emerald-700 rounded-full" : "bg-blue-100 text-blue-700 rounded-full")
-              )}>
-                {grade.status}
-              </span>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <GradeItem label="Bimestre 1" value={grade.grade_b1.toFixed(1)} />
-              <GradeItem label="Bimestre 2" value={grade.grade_b2 > 0 ? grade.grade_b2.toFixed(1) : "-"} />
-              <GradeItem label="Média Final" value={grade.final_grade.toFixed(1)} highlight />
-            </div>
+  const GradesView = () => {
+    return (
+      <div className="min-h-screen bg-white pb-20">
+        <ViewHeader title="Consulta de Notas" onBack={() => navigateTo("dashboard")} />
+        
+        <div className="p-4 md:p-8 max-w-4xl mx-auto">
+          <div className="mb-6">
+            <h1 className="text-2xl font-medium text-slate-500 uppercase tracking-wide">NOTAS DE PROVAS</h1>
+            <div className="h-0.5 bg-blue-400 w-full mt-2" />
           </div>
-        ))}
+
+          {data.grades.length > 0 ? (
+            <div className="bg-white border border-slate-200 rounded shadow-sm overflow-hidden">
+              {/* Table Header */}
+              <div className="grid grid-cols-12 gap-4 p-4 border-b border-slate-100">
+                <div className="col-span-8">
+                  <span className="text-sm font-bold text-slate-800">Disciplina</span>
+                </div>
+                <div className="col-span-4 text-right">
+                  <span className="text-sm font-bold text-slate-800">Notas</span>
+                </div>
+              </div>
+
+              {/* Table Rows */}
+              <div className="divide-y divide-slate-100">
+                {data.grades.map((grade, index) => (
+                  <div key={`grade-row-img-${grade.id || index}`} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-slate-50 transition-colors">
+                    <div className="col-span-8">
+                      <p className="text-sm font-medium text-slate-600 uppercase tracking-tight">
+                        {grade.discipline_name}
+                      </p>
+                    </div>
+                    <div className="col-span-4 flex justify-end gap-4">
+                      <div className="text-center min-w-[40px]">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">AV</p>
+                        <p className="text-lg font-bold text-blue-500">
+                          {grade.final_grade.toFixed(1).replace('.', ',')}
+                        </p>
+                      </div>
+                      <div className="text-center min-w-[40px]">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">AVS</p>
+                        <p className="text-lg font-bold text-slate-300">-</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20 text-center space-y-6">
+              <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center text-slate-300">
+                <Loader2 className="w-10 h-10 animate-spin" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-lg font-bold text-slate-900">Sincronizando notas...</h3>
+                <p className="text-sm text-slate-500 max-w-xs mx-auto">
+                  Estamos preparando seu boletim. Isso pode levar alguns segundos.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {data.grades.length > 0 && (
+            <div className="mt-8 flex justify-end">
+              <button 
+                onClick={() => window.print()}
+                className="bg-slate-200 hover:bg-slate-300 text-slate-700 px-6 py-2 rounded text-sm font-medium transition-colors"
+              >
+                Imprimir
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Floating Help Button */}
+        <div className="fixed bottom-6 right-6 z-50">
+          <button className="bg-[#80ced6] text-white px-6 py-3 rounded-xl shadow-xl flex items-center gap-3 hover:scale-105 transition-transform active:scale-95">
+            <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+              <MessageCircle className="w-5 h-5 text-[#80ced6]" />
+            </div>
+            <span className="font-bold text-sm">Posso ajudar?</span>
+          </button>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const GradeItem = ({ label, value, highlight }: any) => (
     <div className={cn(
@@ -2448,17 +3147,17 @@ export default function App() {
     )}>
       <ViewHeader title="Horário de Aulas" onBack={() => navigateTo("dashboard")} />
       <div className="p-6 space-y-6">
-        {["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira"].map(day => {
+        {["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira"].map((day, dayIdx) => {
           const dayClasses = data.schedule.filter(s => s.day_of_week === day);
           if (dayClasses.length === 0) return null;
           return (
-            <div key={day} className="space-y-3">
+            <div key={`day-group-section-${day}-${dayIdx}`} className="space-y-3">
               <h3 className={cn(
                 "font-bold uppercase text-xs tracking-widest ml-1",
                 appSettings?.theme === 'retro' ? "text-black" : "text-slate-400"
               )}>{day}</h3>
               {dayClasses.map((item, index) => (
-                <div key={`${item.id}-${index}`} className="card flex gap-4 items-center">
+                <div key={`schedule-row-${dayIdx}-${item.id || index}-${index}`} className="card flex gap-4 items-center">
                   <div className={cn(
                     "w-16 text-center pr-4",
                     appSettings?.theme === 'retro' ? "border-r border-black" : "border-r border-slate-100"
@@ -2496,7 +3195,7 @@ export default function App() {
         {[...data.announcements]
           .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
           .map((ann, index) => (
-            <div key={`${ann.id}-${index}`} className={cn(
+            <div key={`ann-full-list-${ann.id || index}-${index}`} className={cn(
               "card relative overflow-hidden",
               ann.important && (
                 appSettings?.theme === 'retro' ? "border-l-4 border-l-black" : 
@@ -2533,7 +3232,7 @@ export default function App() {
       <div className="p-6 space-y-4">
         {data.payments.length > 0 ? (
           data.payments.map((pay, index) => (
-            <div key={`${pay.id}-${index}`} className="card">
+            <div key={`payment-item-${pay.id || index}-${index}`} className="card">
               <div className="flex justify-between items-center mb-4">
                 <div>
                   <p className="text-[10px] text-slate-400 font-bold uppercase">Vencimento</p>
@@ -2649,7 +3348,7 @@ export default function App() {
           <div className="space-y-4">
             <h3 className="font-bold text-slate-800">Histórico de Envios</h3>
             {data.activities.map((act, index) => (
-              <div key={`${act.id}-${index}`} className="card flex justify-between items-center">
+              <div key={`activity-item-${act.id || index}-${index}`} className="card flex justify-between items-center">
                 <div>
                   <h4 className="font-bold text-slate-900">{act.title}</h4>
                   <p className="text-xs text-slate-500">{act.hours} horas</p>
@@ -2775,7 +3474,7 @@ export default function App() {
             </div>
             
             <h2 className="text-2xl font-bold mb-1">{user?.name}</h2>
-            <p className="text-white/80 text-sm mb-1">{user?.email || "aluno@baraodemaua.br"}</p>
+            <p className="text-white/80 text-sm mb-1">{user?.email || "aluno@baraodatorre.br"}</p>
             <p className="text-white/80 text-sm">{user?.matricula}</p>
             
             <div className="absolute bottom-4 right-6 opacity-60">
@@ -2796,7 +3495,7 @@ export default function App() {
                   <div className="w-12 h-12 bg-white p-1.5 rounded-lg shadow-sm">
                     <img src={appSettings.logo_url} alt="Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
                   </div>
-                  <h3 className="text-2xl font-bold text-white tracking-tight">{appSettings?.college_name || "Barão de Mauá"}</h3>
+                  <h3 className="text-2xl font-bold text-white tracking-tight">{getCollegeName(appSettings)}</h3>
                 </div>
                 <p className="text-white/60 text-xs mt-4 font-medium uppercase tracking-widest">{user?.course || "Marketing Digital"}</p>
               </div>
@@ -2859,7 +3558,7 @@ export default function App() {
               <button 
                 onClick={() => {
                   const subject = encodeURIComponent(`Cartão Virtual - ${user?.name}`);
-                  const body = encodeURIComponent(`Olá,\n\nSegue os dados do meu Cartão Virtual da ${appSettings?.college_name || "Barão de Mauá"}:\n\nNome: ${user?.name}\nMatrícula: ${user?.matricula}\nCurso: ${user?.course}\n\nAtenciosamente.`);
+                  const body = encodeURIComponent(`Olá,\n\nSegue os dados do meu Cartão Virtual da ${getCollegeName(appSettings)}:\n\nNome: ${user?.name}\nMatrícula: ${user?.matricula}\nCurso: ${user?.course}\n\nAtenciosamente.`);
                   window.location.href = `mailto:?subject=${subject}&body=${body}`;
                   setShowToast(true);
                 }}
@@ -3088,7 +3787,7 @@ export default function App() {
                         <img src={appSettings.logo_url} alt="Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
                       </div>
                       <div className="text-right flex flex-col items-end">
-                        <h3 className="text-base font-black text-[#00a2b1] leading-tight">{appSettings?.college_name || "Barão de Mauá"}</h3>
+                        <h3 className="text-base font-black text-[#00a2b1] leading-tight">{getCollegeName(appSettings)}</h3>
                         <div className="flex items-center gap-2 mt-0.5">
                           <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest">Cartão de Identificação</p>
                           <Wifi className="w-3.5 h-3.5 text-[#00a2b1] rotate-90" />
@@ -3153,7 +3852,7 @@ export default function App() {
                             style={{ backgroundImage: `url(${appSettings.logo_url})` }}
                           />
                         </div>
-                        <h3 className="font-bold tracking-tight text-lg leading-tight text-white">{appSettings?.college_name || "Barão de Mauá"}</h3>
+                        <h3 className="font-bold tracking-tight text-lg leading-tight text-white">{getCollegeName(appSettings)}</h3>
                       </div>
                       <div className="flex flex-col items-end gap-2">
                         <div className="px-3 py-1 backdrop-blur-md bg-white/20 rounded-full text-white">
@@ -3260,7 +3959,7 @@ export default function App() {
                 <button 
                   onClick={() => {
                     const subject = encodeURIComponent(`Cartão Virtual - ${user?.name}`);
-                    const body = encodeURIComponent(`Olá,\n\nSegue os dados do meu Cartão Virtual da ${appSettings?.college_name || "Barão de Mauá"}:\n\nNome: ${user?.name}\nMatrícula: ${user?.matricula}\nCurso: ${user?.course}\n\nAtenciosamente.`);
+                    const body = encodeURIComponent(`Olá,\n\nSegue os dados do meu Cartão Virtual da ${getCollegeName(appSettings)}:\n\nNome: ${user?.name}\nMatrícula: ${user?.matricula}\nCurso: ${user?.course}\n\nAtenciosamente.`);
                     window.location.href = `mailto:?subject=${subject}&body=${body}`;
                     setShowToast(true);
                   }}
@@ -3311,7 +4010,7 @@ export default function App() {
       <div className="p-6 space-y-4">
         {data.exams.length > 0 ? (
           data.exams.map((exam, index) => (
-            <div key={`${exam.id}-${index}`} className="card">
+            <div key={`exam-row-${exam.id || index}-${index}`} className="card">
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className={cn(
@@ -3362,7 +4061,7 @@ export default function App() {
       <div className="p-6 space-y-4">
         {data.online_classes.length > 0 ? (
           data.online_classes.map((cls, index) => (
-            <div key={`${cls.id}-${index}`} className="card">
+            <div key={`online-class-row-${cls.id || index}-${index}`} className="card">
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className={cn(
@@ -3416,6 +4115,19 @@ export default function App() {
       let finalPhotoUrl = user.photo_url;
 
       if (selectedPhotoFile) {
+        // Delete old photo if it exists
+        if (user.photo_url && user.photo_url.includes('student-photos')) {
+          try {
+            const urlParts = user.photo_url.split('/student-photos/');
+            if (urlParts.length > 1) {
+              const oldPath = urlParts[1];
+              await db.deleteFile('student-photos', oldPath);
+            }
+          } catch (deleteErr) {
+            console.warn("Could not delete old photo:", deleteErr);
+          }
+        }
+
         // Upload to Supabase Storage
         const fileExt = selectedPhotoFile.name.split('.').pop();
         const fileName = `${user.id}-${Math.random()}.${fileExt}`;
@@ -3423,9 +4135,9 @@ export default function App() {
         
         try {
           finalPhotoUrl = await db.uploadFile('student-photos', filePath, selectedPhotoFile);
-        } catch (uploadErr) {
-          console.error("Upload error:", uploadErr);
-          alert("Erro ao fazer upload da foto. Verifique se o bucket 'student-photos' existe e está público.");
+        } catch (uploadErr: any) {
+          console.error("Upload error details:", uploadErr);
+          alert(`Erro no Supabase: ${uploadErr.message || "Erro desconhecido"}. Verifique se o bucket 'student-photos' existe e se as políticas de INSERT/UPDATE estão configuradas no Storage.`);
           return;
         }
       }
@@ -3532,7 +4244,7 @@ export default function App() {
               </div>
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase">Data de Cadastro</p>
-                <p className="text-sm font-black text-slate-700">{user?.enrollment_date}</p>
+                <p className="text-sm font-black text-slate-700">{formatDate(user?.enrollment_date)}</p>
               </div>
             </div>
           </div>
@@ -3736,7 +4448,7 @@ export default function App() {
             <Loader2 className="w-10 h-10 text-white animate-spin" />
           </div>
           
-          <h3 className="mt-6 text-2xl font-black text-white uppercase tracking-tight">{appSettings?.college_name || "Barão de Mauá"}</h3>
+          <h3 className="mt-6 text-2xl font-black text-white uppercase tracking-tight">{getCollegeName(appSettings)}</h3>
           <p className="mt-2 text-white/80 text-sm font-bold uppercase tracking-widest">Carregando seu portal...</p>
           
           <div className="mt-10 w-40 h-2 bg-white/20 rounded-full overflow-hidden">
@@ -3933,6 +4645,7 @@ export default function App() {
         )}
         
         <ForgotRecoveryModal />
+        <SignUpModal />
       </AnimatePresence>
       {renderView()}
     </div>

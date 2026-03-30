@@ -13,7 +13,7 @@ export const COURSES = [
   "Psicologia"
 ];
 
-const initialData = {
+export const initialData = {
   users: [
     {
       id: 1,
@@ -21,7 +21,8 @@ const initialData = {
       password: "1515",
       name: "Administrador Sistema",
       role: "admin",
-      photo_url: "https://picsum.photos/seed/admin/200/200"
+      photo_url: "https://picsum.photos/seed/admin/200/200",
+      status: "active"
     },
     {
       id: 2,
@@ -44,7 +45,8 @@ const initialData = {
       role: "student",
       photo_url: "https://instagram.frao2-1.fna.fbcdn.net/v/t51.82787-19/524607852_18286724086249019_150308545640432068_n.jpg?stp=dst-jpg_s150x150_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby44MjcuYzIifQ&_nc_ht=instagram.frao2-1.fna.fbcdn.net&_nc_cat=111&_nc_oc=Q6cZ2QEPhcvkzy9ViP7b39p2MNHkbkwdI4kl3x-EvxFPwqvyhmYJ6FS11evaybGytG1aut8aU5-ODI52iErjDz3cf4jt&_nc_ohc=wI29r77OcMAQ7kNvwFqjlUA&_nc_gid=pSbilv59RtgUGh4TsBJ8bw&edm=AP4sbd4BAAAA&ccb=7-5&oh=00_Afymj4_i98FGXX9UM24o4DbiO2w8Mx9jaX-dMDD6EWeVEw&oe=69B68DBD&_nc_sid=7a9f4b",
       enrollment_proof_url: "https://drive.google.com/file/d/1ajgIitZ0hD__BAKqdtTVSxuuYH0km3lR/view?usp=drive_link",
-      enrollment_proof_urls: {}
+      enrollment_proof_urls: {},
+      status: "active"
     },
     {
       id: 3,
@@ -67,7 +69,8 @@ const initialData = {
       role: "student",
       photo_url: "https://drive.google.com/file/d/1746yLwXeJWKoaOtfUa9lGwGyS7aahoe_/preview",
       enrollment_proof_url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-      enrollment_proof_urls: {}
+      enrollment_proof_urls: {},
+      status: "active"
     },
     {
       id: 4,
@@ -90,7 +93,8 @@ const initialData = {
       role: "student",
       photo_url: "https://drive.google.com/file/d/1746yLwXeJWKoaOtfUa9lGwGyS7aahoe_/view?usp=drive_link",
       enrollment_proof_url: "https://drive.google.com/file/d/1DcbkK1ML2KukIqznDHqI9TcI7z-W78Kb/view?usp=drive_link",
-      enrollment_proof_urls: {}
+      enrollment_proof_urls: {},
+      status: "active"
     },
     {
       id: 5,
@@ -112,7 +116,8 @@ const initialData = {
       role: "student",
       photo_url: "https://picsum.photos/seed/student5/200/200",
       enrollment_proof_url: "https://drive.google.com/file/d/1oRkBd4jFEJJhmsZdVatoN8HMycL2IwhJ/view?usp=drive_link",
-      enrollment_proof_urls: {}
+      enrollment_proof_urls: {},
+      status: "active"
     }
   ],
   disciplines: [
@@ -190,42 +195,60 @@ const initialData = {
     { id: 23, discipline_id: 12, discipline_name: "Marketing Digital - Oficina de Tráfego", link: "https://meet.google.com/mark-traf-1", day_of_week: "Sábado", time: "17:00", mandatory: false }
   ],
   appSettings: {
-    logo_url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRVFYMUkJQx9MhrRDAOkp8HpK8qBnhc7WwLtw&s",
+    logo_url: "https://cdn-icons-png.flaticon.com/512/3135/3135810.png",
     primary_color: "#1fbba6", // Teal from logo
     secondary_color: "#0066cc", // Blue from logo
     theme: "barao",
-    college_name: "Barão de Mauá"
+    college_name: "Barão da Torre"
   },
   news: [
     {
       id: 1,
-      title: "Barão sedia evento do Coren-SP",
-      description: "O encontro reuniu responsáveis técnicos e enfermeiros no anfiteatro da Unidade Central.",
-      image: "/assets/news/nursing.png"
+      title: "Barão da Torre sedia evento do Coren-SP",
+      description: "O encontro reuniu responsáveis técnicos e enfermeiros no anfiteatro da Unidade Central para discutir o futuro da enfermagem.",
+      image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80&w=1000"
     },
     {
       id: 2,
       title: "Novo Laboratório de Inovação",
-      description: "Espaço contará com as tecnologias mais modernas para os cursos de Engenharia e Design.",
-      image: "/assets/news/lab.png"
+      description: "Espaço contará com as tecnologias mais modernas para os cursos de Engenharia e Design, fomentando a criatividade.",
+      image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=1000"
     },
     {
       id: 3,
       title: "Simpósio de Farmácia e Medicina",
-      description: "Renomados especialistas discutem as tendências da saúde no Auditório Central.",
-      image: "/assets/news/symposium.png"
+      description: "Renomados especialistas discutem as tendências da saúde no Auditório Central com foco em novas terapias.",
+      image: "https://images.unsplash.com/photo-1505751172107-129658a287ec?auto=format&fit=crop&q=80&w=1000"
     },
     {
       id: 4,
       title: "Inscrições Abertas para o PEC 2026",
-      description: "O Programa de Estímulo à Carreira oferece vagas em diversas áreas para alunos.",
-      image: "/assets/news/career.png"
+      description: "O Programa de Estímulo à Carreira oferece vagas em diversas áreas para alunos que buscam o primeiro estágio.",
+      image: "https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&q=80&w=1000"
     },
     {
       id: 5,
       title: "Projeto Rondon seleciona voluntários",
-      description: "Alunos de todos os cursos podem participar da missão humanitária em julho.",
-      image: "/assets/news/volunteers.png"
+      description: "Alunos de todos os cursos podem participar da missão humanitária em julho, levando conhecimento ao interior.",
+      image: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=1000"
+    },
+    {
+      id: 6,
+      title: "Workshop de Inteligência Artificial",
+      description: "Aprenda as ferramentas que estão transformando o mercado de trabalho em um workshop prático de 3 dias.",
+      image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=1000"
+    },
+    {
+      id: 7,
+      title: "Bolsas de Estudo para Intercâmbio",
+      description: "A Barão da Torre anuncia novas parcerias com universidades europeias para programas de intercâmbio em 2026.",
+      image: "https://images.unsplash.com/photo-1523050335392-9bc567597280?auto=format&fit=crop&q=80&w=1000"
+    },
+    {
+      id: 8,
+      title: "Inauguração da Nova Biblioteca",
+      description: "Um espaço totalmente revitalizado com mais de 50 mil títulos e áreas de estudo individual e em grupo.",
+      image: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&q=80&w=1000"
     }
   ]
 };
@@ -299,7 +322,7 @@ export const fileDB = {
   }
 };
 
-const generateTuitionPayments = (studentId: number) => {
+export const generateTuitionPayments = (studentId: number) => {
   const payments = [];
   const baseId = Date.now() + Math.floor(Math.random() * 1000);
   const currentMonth = new Date().getMonth() + 1;
@@ -323,7 +346,7 @@ const generateTuitionPayments = (studentId: number) => {
   return payments;
 };
 
-const getDisciplinesByCourse = (course: string) => {
+export const getDisciplinesByCourse = (course: string) => {
   const courseUpper = (course || "").toUpperCase();
   const disciplines = initialData.disciplines;
   
@@ -344,7 +367,7 @@ const getDisciplinesByCourse = (course: string) => {
   return disciplines;
 };
 
-const generateRandomGrades = (studentId: number, course: string, semester: number) => {
+export const generateRandomGrades = (studentId: number, course: string, semester: number) => {
   const grades: any[] = [];
   const relevantDisciplines = getDisciplinesByCourse(course);
 
@@ -352,6 +375,7 @@ const generateRandomGrades = (studentId: number, course: string, semester: numbe
     const gradeB1 = Number((Math.random() * (10 - 4) + 4).toFixed(1));
     const gradeB2 = Number((Math.random() * (10 - 4) + 4).toFixed(1));
     const finalGrade = Number(((gradeB1 + gradeB2) / 2).toFixed(2));
+    const absences = Math.floor(Math.random() * 10);
     
     grades.push({
       id: Date.now() + index + (studentId * 10),
@@ -361,6 +385,7 @@ const generateRandomGrades = (studentId: number, course: string, semester: numbe
       grade_b1: gradeB1,
       grade_b2: gradeB2,
       final_grade: finalGrade,
+      absences: absences,
       status: finalGrade >= 6 ? "Aprovado" : "Em andamento"
     });
   });
@@ -376,8 +401,37 @@ export const getDB = () => {
   }
   const parsed = JSON.parse(data);
   
+  // Aggressive migration to replace all occurrences of the old name in the database
+  let dbString = JSON.stringify(parsed);
+  const replacements = [
+    { old: /Barão de Mauá/gi, new: "Barão da Torre" },
+    { old: /Faculdade Barão de Mauá/gi, new: "Faculdade Barão da Torre" },
+    { old: /Centro Universitário Barão de Mauá/gi, new: "Centro Universitário Barão da Torre" },
+    { old: /baraodemaua\.br/gi, new: "baraodatorre.br" }
+  ];
+  
+  let needsUpdate = false;
+  replacements.forEach(({ old, new: newValue }) => {
+    if (dbString.match(old)) {
+      dbString = dbString.replace(old, newValue);
+      needsUpdate = true;
+    }
+  });
+
+  if (needsUpdate) {
+    const updatedParsed = JSON.parse(dbString);
+    saveDB(updatedParsed);
+    return updatedParsed;
+  }
+
   // Ensure appSettings exists even if DB was created before appSettings was added
-  if (!parsed.appSettings || parsed.appSettings.logo_url === "https://lh3.googleusercontent.com/d/1X_m_v_v_v_v_v_v_v_v_v_v_v_v_v_v_v") {
+  const oldLogos = [
+    "https://lh3.googleusercontent.com/d/1X_m_v_v_v_v_v_v_v_v_v_v_v_v_v_v_v",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRVFYMUkJQx9MhrRDAOkp8HpK8qBnhc7WwLtw&s",
+    "https://picsum.photos/seed/college/200/200",
+    "/icon.png"
+  ];
+  if (!parsed.appSettings || oldLogos.includes(parsed.appSettings.logo_url)) {
     parsed.appSettings = { 
       ...(parsed.appSettings || {}), 
       logo_url: initialData.appSettings.logo_url,
@@ -587,6 +641,14 @@ export const getDB = () => {
         u.enrollment_date = "10/02/2026";
         structureChanged = true;
       }
+      if (!u.status) {
+        u.status = "active";
+        structureChanged = true;
+      }
+    }
+    if (u.role === 'admin' && !u.status) {
+      u.status = "active";
+      structureChanged = true;
     }
   });
 
@@ -615,6 +677,10 @@ export const db = {
     const user = database.users.find((u: any) => u.matricula === matricula && u.password === pass);
     
     if (user) {
+      if (user.role === 'student' && user.status === 'blocked') {
+        throw new Error("Sua conta está bloqueada. Aguarde a liberação pelo administrador.");
+      }
+
       // Hydrate heavy files from IndexedDB only if they are missing in the main object
       if (!user.photo_url) {
         const storedPhoto = await fileDB.get(`photo_${user.id}`);
@@ -704,6 +770,7 @@ export const db = {
       ...student,
       id,
       role: 'student',
+      status: student.status || 'active'
     };
 
     // Don't store large Base64 strings in localStorage
@@ -795,9 +862,106 @@ export const db = {
     saveDB(database);
     return database.appSettings;
   },
+  generateAllFictionalData: async () => {
+    const database = getDB();
+    const students = database.users.filter((u: any) => u.role === 'student');
+    let updatedCount = 0;
+
+    for (const student of students) {
+      // Check if student has payments
+      const hasPayments = database.payments.some((p: any) => Number(p.student_id) === Number(student.id));
+      if (!hasPayments) {
+        const studentPayments = generateTuitionPayments(student.id);
+        database.payments.push(...studentPayments);
+        updatedCount++;
+      }
+
+      // Check if student has grades
+      const hasGrades = database.grades.some((g: any) => Number(g.student_id) === Number(student.id));
+      if (!hasGrades) {
+        const studentGrades = generateRandomGrades(student.id, student.course, student.semester);
+        database.grades.push(...studentGrades);
+        updatedCount++;
+      }
+    }
+
+    if (updatedCount > 0) {
+      saveDB(database);
+    }
+    return updatedCount;
+  },
+  generateStudentFictionalData: async (studentId: number) => {
+    const database = getDB();
+    const student = database.users.find((u: any) => Number(u.id) === Number(studentId));
+    if (!student) throw new Error("Aluno não encontrado");
+
+    // Clear existing if any (to allow regeneration)
+    database.payments = database.payments.filter((p: any) => Number(p.student_id) !== Number(studentId));
+    database.grades = database.grades.filter((g: any) => Number(g.student_id) !== Number(studentId));
+
+    // Generate new
+    const studentPayments = generateTuitionPayments(student.id);
+    database.payments.push(...studentPayments);
+
+    const studentGrades = generateRandomGrades(student.id, student.course, student.semester);
+    database.grades.push(...studentGrades);
+
+    saveDB(database);
+    return true;
+  },
   getUserByEmail: async (email: string): Promise<any | null> => {
     const database = getDB();
     const student = database.users.find((u: any) => u.role === 'student' && u.email?.toLowerCase() === email.toLowerCase());
     return student || null;
+  },
+  getPayments: async () => {
+    const database = getDB();
+    return database.payments || [];
+  },
+  uploadFile: async (bucket: string, path: string, file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  },
+  deleteFile: async (bucket: string, path: string): Promise<void> => {
+    return Promise.resolve();
+  },
+  signUp: async (signUpData: any) => {
+    const database = getDB();
+    
+    // Check if matricula already exists
+    if (database.users.some((u: any) => u.matricula === signUpData.matricula)) {
+      throw new Error("Esta matrícula já está cadastrada.");
+    }
+
+    const newId = database.users.length > 0 ? Math.max(...database.users.map((u: any) => u.id)) + 1 : 1;
+    
+    const newStudent = { 
+      ...signUpData, 
+      id: newId, 
+      role: 'student',
+      status: 'blocked', // Always blocked on sign up
+      semester: 1,
+      regularity: "Regular",
+      enrollment_date: new Date().toLocaleDateString('pt-BR'),
+      validity: "12/2026",
+      enrollment_proof_urls: {}
+    };
+
+    database.users.push(newStudent);
+    saveDB(database);
+
+    // Generate initial data
+    const studentPayments = generateTuitionPayments(newId);
+    database.payments.push(...studentPayments);
+
+    const studentGrades = generateRandomGrades(newId, newStudent.course, 1);
+    database.grades.push(...studentGrades);
+
+    saveDB(database);
+    return newStudent;
   }
 };
